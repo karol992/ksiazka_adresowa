@@ -1,0 +1,6 @@
+1|Robert|Kubica|88|rk@williams.com|Ferrari Soon 2020|
+2|Fernando|Alonso|14|alonso@mclaren.com|The best driver F1|
+3|Robert|Lewandowski|9|R9@bayern.de|Bayern Monachium 9, 00-000 Monachium|
+4|Lech|Walesa|TW Bolek|na_smyczy_wachowskiego@kiszczak.prl|Plusy dodatnie, plusy ujemne|
+5|Lech|Kaczynski|10-04-2010|zablokowal.jedwabne@aneks.wsi|b'nai.b'rith 2007|
+6|Jaroslaw|Kaczynski|06 02 1989|traktat.lizbonski@de.eu|Rekonstrukcja 1926, 1939 Sanacja|
