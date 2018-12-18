@@ -7,11 +7,11 @@
 
 using namespace std;
 struct Contact {
-    int id;
+    int id, userId;
     string name, surname, tel, email, address;
 };
 void error() {
-    cout << "Nie mozna otworzyc pliku: ksiazka_adresowa_nowy_format.txt" << endl;
+    cout << "Nie mozna otworzyc pliku: Adresaci.txt" << endl;
     system("pause");
 }
 string toString(int number) {
@@ -41,6 +41,7 @@ string takeArgument (string choice) {
         cout << "Podaj nazwisko: ";
     }
     cin >> argument;
+    cout << endl;
     return argument;
 }
 bool displayByName(vector<Contact> contacts, string argument) {
@@ -48,7 +49,7 @@ bool displayByName(vector<Contact> contacts, string argument) {
     for(vector<Contact>::iterator itr = contacts.begin(), itrEnd = contacts.end(); itr != itrEnd; ++itr) {
         if (itr -> name == argument) {
             showFullSingleContact(*itr);
-            anyResult == true;
+            anyResult = true;
         }
     }
     return anyResult;
@@ -58,7 +59,7 @@ bool displayBySurname(vector<Contact> contacts, string argument) {
     for(vector<Contact>::iterator itr = contacts.begin(), itrEnd = contacts.end(); itr != itrEnd; ++itr) {
         if (itr -> surname == argument) {
             showFullSingleContact(*itr);
-            anyResult == true;
+            anyResult = true;
         }
     }
     return anyResult;
@@ -74,7 +75,7 @@ void findBy(vector<Contact> contacts, string choice) {
         anyResult = displayBySurname(contacts, argument);
     }
     if (anyResult == false) {
-        cout << "Brak kontaktow do wyswietlenia." << endl;
+        cout << "Brak kontaktow do wyswietlenia." << endl << endl;
     }
     system("pause");
 }
@@ -87,11 +88,28 @@ string lettersToWord(vector<char> temporaryLetters) {
     }
     return temporaryArgument;
 }
-vector<Contact> loadFileContacts() {
+int loadLastContactId () {
+    string line;
+    fstream file;
+    vector<char> temporaryLetters;
+    file.open("Adresaci.txt", ios::in);
+    if (file.good() == false) {
+        return 0;
+    }
+    while (getline(file, line)) {
+        temporaryLetters.clear();
+        for (int i = 0; line[i] != '|'; i++) {
+            temporaryLetters.push_back(line[i]);
+            }
+    }
+    file.close();
+    return atoi(lettersToWord(temporaryLetters).c_str());
+}
+vector<Contact> loadContacts(int userId) {
     vector<Contact> contacts;
     string line;
     fstream file;
-    file.open("ksiazka_adresowa_nowy_format.txt", ios::in);
+    file.open("Adresaci.txt", ios::in);
     if (file.good() == false) {
         return contacts;
     }
@@ -105,24 +123,27 @@ vector<Contact> loadFileContacts() {
                 switch (position) {
                 case 1:
                     tempContact.id = atoi(lettersToWord(temporaryLetters).c_str());
-                    cout << "Kontakt ID" << tempContact.id << " ";
+                    //cout << "Kontakt ID" << tempContact.id << " ";
                     break;
                 case 2:
-                    tempContact.name = lettersToWord(temporaryLetters);
-                    cout << tempContact.name << " ";
+                    tempContact.userId = atoi(lettersToWord(temporaryLetters).c_str());
                     break;
                 case 3:
-                    tempContact.surname = lettersToWord(temporaryLetters);
-                    cout << tempContact.surname << endl;
-                    Sleep(150);
+                    tempContact.name = lettersToWord(temporaryLetters);
+                    //cout << tempContact.name << " ";
                     break;
                 case 4:
-                    tempContact.tel = lettersToWord(temporaryLetters);
+                    tempContact.surname = lettersToWord(temporaryLetters);
+                    //cout << tempContact.surname << endl;
+                    //Sleep(150);
                     break;
                 case 5:
-                    tempContact.email = lettersToWord(temporaryLetters);
+                    tempContact.tel = lettersToWord(temporaryLetters);
                     break;
                 case 6:
+                    tempContact.email = lettersToWord(temporaryLetters);
+                    break;
+                case 7:
                     tempContact.address = lettersToWord(temporaryLetters);
                     break;
                 }
@@ -130,17 +151,20 @@ vector<Contact> loadFileContacts() {
                 position++;
             }
         }
-        contacts.push_back(tempContact);
+        if (tempContact.userId == userId) {
+            contacts.push_back(tempContact);
+        }
     }
     file.close();
-    Sleep(400);
+    //Sleep(400);
     return contacts;
 }
 void writeContactToFile(Contact newContact) {
     fstream file;
-    file.open("ksiazka_adresowa_nowy_format.txt", ios::out | ios::app);
+    file.open("Adresaci.txt", ios::out | ios::app);
     if (file.good()) {
         file << newContact.id << "|";
+        file << newContact.userId << "|";
         file << newContact.name << "|";
         file << newContact.surname << "|";
         file << newContact.tel << "|";
@@ -153,22 +177,17 @@ void writeContactToFile(Contact newContact) {
 }
 void rewriteAllContactsToFile(vector<Contact> contacts) {
     fstream file;
-    file.open("ksiazka_adresowa_nowy_format.txt", ios::out | ios::trunc);
+    file.open("Adresaci.txt", ios::out | ios::trunc);
     file.close();
     for(vector<Contact>::iterator itr = contacts.begin(), itrEnd = contacts.end(); itr != itrEnd; ++itr) {
         writeContactToFile(*itr);
     }
 }
-Contact addContact(vector<Contact> contacts) {
+Contact addContact(int userId) {
     system("cls");
     Contact newContact;
-    if (contacts.empty()) {
-        newContact.id = 1;
-    } else {
-        vector<Contact>::iterator itrEnd = contacts.end();
-        --itrEnd;
-        newContact.id = (itrEnd -> id)+1;
-    }
+    newContact.id = loadLastContactId()+1;
+    newContact.userId = userId;
     cout << "Dodawanie kontaktu ID:" << newContact.id << endl;
     cout << "Podaj imie: ";
     cin >> newContact.name;
@@ -182,7 +201,6 @@ Contact addContact(vector<Contact> contacts) {
     cout << "Podaj adres: ";
     cin.sync();
     getline(cin, newContact.address);
-    contacts.push_back(newContact);
     writeContactToFile(newContact);
     cout << "Kontakt zostal dodany." << endl;
     Sleep(1000);
@@ -192,7 +210,7 @@ void showAllContacts(vector<Contact> contacts, string type) {
     system("cls");
     cout << "LISTA KONTAKTOW" << endl << endl;
     if (contacts.empty()) {
-        cout << "Brak kontaktow do wyswietlenia." << endl;
+        cout << "Brak kontaktow do wyswietlenia." << endl <<endl;
         system("pause");
     } else if (type == "full") {
         for(vector<Contact>::iterator itr = contacts.begin(), itrEnd = contacts.end(); itr != itrEnd; ++itr) {
@@ -288,8 +306,11 @@ vector<Contact> editContact(vector<Contact> contacts) {
     return contacts;
 }
 int main() {
-    vector<Contact> contacts = loadFileContacts();
-    char choice = '5';
+    int userId;
+    cout<<"User ID: ";
+    cin>>userId;
+    vector<Contact> contacts = loadContacts(userId);
+    char choice = '9';
     while (true) {
         system("cls");
         cout << "KSIAZKA ADRESOWA" << endl;
@@ -297,13 +318,14 @@ int main() {
         cout << "2. Wyszukaj po imieniu." << endl;
         cout << "3. Wyszukaj po nazwisku." << endl;
         cout << "4. Wyswietl wszystkie kontakty." << endl;
-        cout << "5. Usun adresata." << endl;
-        cout << "6. Edytuj adresata." << endl;
+        //cout << "5. Usun adresata." << endl;
+        //cout << "6. Edytuj adresata." << endl;
+        //cout << "7. Zmien haslo." << endl;
         cout << "9. Zakoncz program." << endl;
         choice = getch();
         switch(choice) {
         case '1':
-            contacts.push_back(addContact(contacts));
+            contacts.push_back(addContact(userId));
             break;
         case '2':
             findBy(contacts,"name");
@@ -315,10 +337,12 @@ int main() {
             showAllContacts(contacts, "full");
             break;
         case '5':
-            contacts = deleteContact(contacts);
+            //contacts = deleteContact(contacts);
             break;
         case '6':
-            contacts = editContact(contacts);
+            //contacts = editContact(contacts);
+            break;
+        case '7':
             break;
         case '9':
             exit(0);
