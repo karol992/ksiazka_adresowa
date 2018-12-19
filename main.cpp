@@ -270,7 +270,7 @@ void passwordReset (int id) {
     vector <User> users = loadUsersFromFile();
     User currentUser;
     currentUser = getCurrentUserInfoById(users, id);
-    while(true) {
+    for (int i = 0; i < 3; i++) {
         system("cls");
         cout << "ZMIANA HASLA\n\nPodaj stare haslo: ";
         if (getPassword() == currentUser.password) {
@@ -280,8 +280,7 @@ void passwordReset (int id) {
             break;
         } else {
             cout << "Nieprawidlowe haslo!";
-            Sleep(2000);
-            break;
+            Sleep(1500);
         }
     }
 
@@ -342,7 +341,6 @@ int loadLastContactId () {
     return atoi(lettersToWord(temporaryLetters).c_str());
 }
 vector <Contact> loadContacts(int userId) {
-    cout << "Wczytywanie kontaktow w toku..." << endl;
     vector <Contact> contacts;
     string line;
     fstream file;
@@ -385,8 +383,6 @@ vector <Contact> loadContacts(int userId) {
             }
         }
         if (tempContact.userId == userId) {
-            cout << "ID" << tempContact.id << " " << endl;
-            Sleep(150);
             contacts.push_back(tempContact);
         }
     }
@@ -604,10 +600,8 @@ int main() {
             }
         }
         while (currentUserID != 0) {
-            system("cls");
             vector<Contact> contacts = loadContacts(currentUserID);
             char choice = '8';
-            while (currentUserID != 0) {
                 userMenu();
                 choice = getch();
                 switch(choice) {
@@ -639,7 +633,6 @@ int main() {
                     cout << "Opcja niedostepna." << endl;
                     Sleep(1000);
                 }
-            }
         }
     }
     return 0;
