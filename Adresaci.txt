@@ -1,6 +1,0 @@
-1|1|AA|AA|111|AAA|AAA|
-2|2|BB|BB|222|BBB|BBB|
-3|1|CC|CC|333|CCC|CCC|
-42|2|DD|DD|444|DDD|DDD|
-43|3|imie|nazwisko|tel|email|adres|
-44|1|AA|BB|adf|adgsf|sadfs|
