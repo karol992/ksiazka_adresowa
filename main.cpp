@@ -4,7 +4,6 @@
 #include <conio.h>
 #include <vector>
 #include <sstream>
-#include <cstdio>
 
 using namespace std;
 struct Contact {
@@ -484,7 +483,7 @@ vector <Contact> deleteContact(vector <Contact> contacts) {
     cin >> deleteID;
     for(vector <Contact>::iterator itr = contacts.begin(), itrEnd = contacts.end(); itr != itrEnd; ++itr) {
         if (toString(itr -> id) == deleteID) {
-            cout << "Czy napewno chcesz usunac kontakt ID" << deleteID << " ? (t/n) ";
+            cout << endl << "Czy napewno chcesz usunac kontakt ID" << deleteID << " ? (t/n) ";
             char choice;
             do {
                 cin >> choice;
@@ -492,7 +491,7 @@ vector <Contact> deleteContact(vector <Contact> contacts) {
                     return contacts;
                 }
             } while ((choice != 'n') && (choice != 't'));
-            rewriteAllContactsToFile(*itr, "edit");
+            rewriteAllContactsToFile(*itr, "");
             contacts.erase(itr);
             cout << endl << "Usunieto kontakt ID" << deleteID << "." << endl;
             Sleep(1500);
