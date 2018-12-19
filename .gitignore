@@ -1,10 +1,9 @@
 bin/
 obj/
-ksiazka_adresowa.cbp
-ksiazka_adresowa.depend
-ksiazka_adresowa.layout
 converter/
 notes/
 test/
-Adresaci.txt
-Uzytkownicy.txt
+*.cbp
+*.depend
+*.layout
+*.txt
