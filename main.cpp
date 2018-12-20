@@ -6,6 +6,11 @@
 #include <sstream>
 
 using namespace std;
+
+string contactsFile = "Adresaci.txt";
+string usersFile = "Uzytkownicy.txt";
+string temporaryFile = "Bufor.txt";
+
 struct Contact {
     int id, userId;
     string name, surname, tel, email, address;
@@ -139,7 +144,7 @@ vector <User> loadUsersFromFile() {
     vector <User> users;
     string line;
     fstream file;
-    file.open("Uzytkownicy.txt", ios::in);
+    file.open(usersFile.c_str(), ios::in);
     if (file.good() == false) {
         return users;
     }
@@ -194,22 +199,16 @@ User getCurrentUserInfoById (vector <User> users, int id) {
     }
     fatalError();
 }
-void writeUserToFile(User user) {
-    fstream file;
-    file.open("Uzytkownicy.txt", ios::out | ios::app);
-    if (file.good()) {
-        file << user.id << "|";
-        file << user.login << "|";
-        file << user.password << "|" << endl;
-        file.close();
-    } else {
-        error();
-    }
+void writeUserToFile(User user, fstream &file) {
+    file << user.id << "|";
+    file << user.login << "|";
+    file << user.password << "|" << endl;
 }
 void registration() {
     vector <User> users = loadUsersFromFile();
     User newUser;
     string firstPassword, secondPassword;
+    fstream file;
     while (true) {
         system("cls");
         cout << "REJESTRACJA NOWEGO UZYTKOWNIKA\n\nPodaj login: ";
@@ -236,14 +235,20 @@ void registration() {
     } while (firstPassword != secondPassword);
     newUser.password = secondPassword;
     newUser.id = getNewUserID(users);
-    writeUserToFile(newUser);
+    file.open(usersFile.c_str(), ios::out | ios::app);
+    if (file.good()) {
+        writeUserToFile(newUser, file);
+        file.close();
+    } else {
+        error();
+    }
 }
 void userRewriteInFile (User currentUser) {
     fstream oldFile, newFile;
     vector<char> temporaryLetters;
     string line;
-    oldFile.open("Uzytkownicy.txt", ios::in);
-    newFile.open("Uzytkownicy_kopia.txt", ios::out | ios::app);
+    oldFile.open(usersFile.c_str(), ios::in);
+    newFile.open(temporaryFile.c_str(), ios::out | ios::app);
     if (oldFile.good() == false) {
         fatalError();
     }
@@ -255,34 +260,47 @@ void userRewriteInFile (User currentUser) {
         if (atoi(lettersToWord(temporaryLetters).c_str()) != currentUser.id) {
             newFile << line << endl;
         } else {
-            newFile << currentUser.id << "|";
-            newFile << currentUser.login << "|";
-            newFile << currentUser.password << "|" << endl;
+            writeUserToFile(currentUser, newFile);
         }
     }
     oldFile.close();
-    remove("Uzytkownicy.txt");
+    remove(usersFile.c_str());
     newFile.close();
-    rename("Uzytkownicy_kopia.txt", "Uzytkownicy.txt");
+    rename(temporaryFile.c_str(), usersFile.c_str());
 }
-void passwordReset (int id) {
+int passwordReset (int id) {
     vector <User> users = loadUsersFromFile();
     User currentUser;
     currentUser = getCurrentUserInfoById(users, id);
+    string firstPassword, secondPassword;
     for (int i = 0; i < 3; i++) {
         system("cls");
         cout << "ZMIANA HASLA\n\nPodaj stare haslo: ";
         if (getPassword() == currentUser.password) {
-            cout << "Podaj nowe haslo: ";
-            currentUser.password = getPassword();
-            userRewriteInFile(currentUser);
-            break;
+            do {
+                system("cls");
+                cout << "ZMIANA HASLA\n\nPodaj nowe haslo: ";
+                firstPassword = getPassword();
+                cout << "Powtorz nowe haslo: ";
+                secondPassword = getPassword();
+                if (firstPassword != secondPassword) {
+                    cout << "Hasla nie zgadzaja sie!";
+                    Sleep(1500);
+                    system("cls");
+                } else {
+                    currentUser.password = secondPassword;
+                    userRewriteInFile(currentUser);
+                    cout << "\nZmiana hasla powiodla sie.";
+                    Sleep(1500);
+                    return 0;
+                }
+            } while (firstPassword != secondPassword);
         } else {
             cout << "Nieprawidlowe haslo!";
             Sleep(1500);
         }
     }
-
+    return 0;
 }
 int login () {
     vector <User> users = loadUsersFromFile();
@@ -326,7 +344,7 @@ int loadLastContactId () {
     string line;
     fstream file;
     vector <char> temporaryLetters;
-    file.open("Adresaci.txt", ios::in);
+    file.open(contactsFile.c_str(), ios::in);
     if (file.good() == false) {
         return 0;
     }
@@ -343,7 +361,7 @@ vector <Contact> loadContacts(int userId) {
     vector <Contact> contacts;
     string line;
     fstream file;
-    file.open("Adresaci.txt", ios::in);
+    file.open(contactsFile.c_str(), ios::in);
     if (file.good() == false) {
         return contacts;
     }
@@ -389,9 +407,7 @@ vector <Contact> loadContacts(int userId) {
     Sleep(400);
     return contacts;
 }
-void writeContactToFile(Contact newContact) {
-    fstream file;
-    file.open("Adresaci.txt", ios::out | ios::app);
+void writeContactToFile(Contact newContact, fstream &file) {
     if (file.good()) {
         file << newContact.id << "|";
         file << newContact.userId << "|";
@@ -400,7 +416,6 @@ void writeContactToFile(Contact newContact) {
         file << newContact.tel << "|";
         file << newContact.email << "|";
         file << newContact.address << "|" << endl;
-        file.close();
     } else {
         error();
     }
@@ -409,10 +424,10 @@ void rewriteAllContactsToFile(Contact currentContact, string choice) {
     fstream oldFile, newFile;
     vector<char> temporaryLetters;
     string line;
-    oldFile.open("Adresaci.txt", ios::in);
-    newFile.open("Adresaci_kopia.txt", ios::out | ios::app);
+    oldFile.open(contactsFile.c_str(), ios::in);
+    newFile.open(temporaryFile.c_str(), ios::out | ios::app);
     if (oldFile.good() == false) {
-        fatalError();
+        error();
     }
     while (getline(oldFile, line)) {
         temporaryLetters.clear();
@@ -422,23 +437,19 @@ void rewriteAllContactsToFile(Contact currentContact, string choice) {
         if (atoi(lettersToWord(temporaryLetters).c_str()) != currentContact.id) {
             newFile << line << endl;
         } else if (choice == "edit") {
-            newFile << currentContact.id << "|";
-            newFile << currentContact.userId << "|";
-            newFile << currentContact.name << "|";
-            newFile << currentContact.surname << "|";
-            newFile << currentContact.tel << "|";
-            newFile << currentContact.email << "|";
-            newFile << currentContact.address << "|" << endl;
+            writeContactToFile(currentContact, newFile);
         }
     }
     oldFile.close();
-    remove("Adresaci.txt");
+    remove(contactsFile.c_str());
     newFile.close();
-    rename("Adresaci_kopia.txt","Adresaci.txt");
+    rename(temporaryFile.c_str(),contactsFile.c_str());
 }
 Contact addContact(int userId) {
     system("cls");
     Contact newContact;
+    fstream file;
+    file.open(contactsFile.c_str(), ios::out | ios::app);
     newContact.id = loadLastContactId()+1;
     newContact.userId = userId;
     cout << "Dodawanie kontaktu ID:" << newContact.id << endl;
@@ -454,7 +465,8 @@ Contact addContact(int userId) {
     cout << "Podaj adres: ";
     cin.sync();
     getline(cin, newContact.address);
-    writeContactToFile(newContact);
+    writeContactToFile(newContact, file);
+    file.close();
     cout << "Kontakt zostal dodany." << endl;
     Sleep(1000);
     return newContact;
@@ -476,7 +488,7 @@ void showAllContacts(vector <Contact> contacts, string type) {
         }
     }
 }
-vector <Contact> deleteContact(vector <Contact> contacts) {
+int deleteContact(vector <Contact> &contacts) {
     string deleteID = "";
     showAllContacts(contacts, "short");
     cout << endl << "Wpisz ID kontaktu do usuniecia: ";
@@ -488,21 +500,21 @@ vector <Contact> deleteContact(vector <Contact> contacts) {
             do {
                 cin >> choice;
                 if (choice == 'n') {
-                    return contacts;
+                    return 0;
                 }
             } while ((choice != 'n') && (choice != 't'));
             rewriteAllContactsToFile(*itr, "");
             contacts.erase(itr);
             cout << endl << "Usunieto kontakt ID" << deleteID << "." << endl;
             Sleep(1500);
-            return contacts;
+            return 0;
         }
     }
     cout << endl << "Nie istnieje kontakt o podanym ID!" << endl;
     Sleep(2000);
-    return contacts;
+    return 0;
 }
-vector <Contact> editContact(vector <Contact> contacts) {
+int editContact(vector <Contact> &contacts) {
     string editID = "";
     showAllContacts(contacts, "short");
     cout << endl << "Wpisz ID kontaktu do edycji: ";
@@ -545,7 +557,7 @@ vector <Contact> editContact(vector <Contact> contacts) {
                     break;
                 case '6':
                     rewriteAllContactsToFile(*itr, "edit");
-                    return contacts;
+                    return 0;
                     break;
                 default:
                     cout << "Opcja niedostepna." << endl;
@@ -556,7 +568,7 @@ vector <Contact> editContact(vector <Contact> contacts) {
     }
     cout << endl << "Nie istnieje kontakt o podanym ID!" << endl;
     Sleep(2000);
-    return contacts;
+    return 0;
 }
 void loginMenu () {
     system ("cls");
@@ -580,7 +592,7 @@ void userMenu () {
 int main() {
     int currentUserID = 0;
     while (true) {
-        while (currentUserID == 0) {
+        if (currentUserID == 0) {
             char choice = '3';
             loginMenu();
             choice = getch();
@@ -597,41 +609,40 @@ int main() {
                 cout << "Opcja niedostepna." << endl;
                 Sleep(1000);
             }
-        }
-        while (currentUserID != 0) {
+        } else {
             vector<Contact> contacts = loadContacts(currentUserID);
             char choice = '8';
-                userMenu();
-                choice = getch();
-                switch(choice) {
-                case '1':
-                    contacts.push_back(addContact(currentUserID));
-                    break;
-                case '2':
-                    findBy(contacts, "name");
-                    break;
-                case '3':
-                    findBy(contacts, "surname");
-                    break;
-                case '4':
-                    showAllContacts(contacts, "full");
-                    break;
-                case '5':
-                    contacts = deleteContact(contacts);
-                    break;
-                case '6':
-                    contacts = editContact(contacts);
-                    break;
-                case '7':
-                    passwordReset(currentUserID);
-                    break;
-                case '8':
-                    currentUserID = 0;
-                    break;
-                default:
-                    cout << "Opcja niedostepna." << endl;
-                    Sleep(1000);
-                }
+            userMenu();
+            choice = getch();
+            switch(choice) {
+            case '1':
+                contacts.push_back(addContact(currentUserID));
+                break;
+            case '2':
+                findBy(contacts, "name");
+                break;
+            case '3':
+                findBy(contacts, "surname");
+                break;
+            case '4':
+                showAllContacts(contacts, "full");
+                break;
+            case '5':
+                deleteContact(contacts);
+                break;
+            case '6':
+                editContact(contacts);
+                break;
+            case '7':
+                passwordReset(currentUserID);
+                break;
+            case '8':
+                currentUserID = 0;
+                break;
+            default:
+                cout << "Opcja niedostepna." << endl;
+                Sleep(1000);
+            }
         }
     }
     return 0;
